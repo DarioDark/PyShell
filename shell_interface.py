@@ -1,6 +1,7 @@
-import tkinter as tk
 import customtkinter as ctk
 
+from console import Console
+from command_handler import CommandHandler
 
 class PyShell(ctk.CTk):
     def __init__(self, *args, **kwargs):
@@ -10,8 +11,8 @@ class PyShell(ctk.CTk):
         self.title("PyShell")
 
         # Center the window
-        width = 800
-        height = 600
+        width = 1100
+        height = 700
 
         screen_width = self.winfo_screenwidth()
         screen_height = self.winfo_screenheight()
@@ -24,7 +25,7 @@ class PyShell(ctk.CTk):
 
         # Main frame
         self.main_frame = MainFrame(self)
-        self.main_frame.pack(pady=10, padx=10, fill="both", expand=True)
+        self.main_frame.pack(pady=20, padx=10, fill="both", expand=True)
 
         self.protocol("WM_DELETE_WINDOW", self.on_close)
         self.mainloop()
@@ -35,7 +36,7 @@ class PyShell(ctk.CTk):
 
 class MainFrame(ctk.CTkFrame):
     def __init__(self, master):
-        super().__init__(master, corner_radius=10, fg_color="#1B1B1B")
+        super().__init__(master, corner_radius=20, fg_color="#1B1B1B")
         self.master = master
 
         self.create_widgets()
@@ -43,82 +44,36 @@ class MainFrame(ctk.CTkFrame):
         self.place_widgets()
 
     def create_widgets(self):
-        self.right_console = RightConsole(self)
-        self.left_console = LeftConsole(self)
+        self.console = Console(self)
+        self.command_handler = CommandHandler(self, self.console)
 
     def bind_widgets(self):
-        self.right_console.bind("<Return>", self.on_enter_pressed)  # Bind the Enter key to the on_enter_pressed method
-        self.right_console.bind("<Key>", self.on_key_pressed)  # Bind the Key event to the on_key_pressed method
+        self.console.bind("<Return>", self.on_enter_pressed)  # Bind the Enter key to the on_enter_pressed method
+        self.console.bind("<Key>", self.on_key_pressed)  # Bind the Key event to the on_key_pressed method
 
     def place_widgets(self):
-        self.left_console.pack(expand=True, fill=ctk.BOTH, side=ctk.LEFT)
-        self.right_console.pack(expand=True, fill=ctk.BOTH, side=ctk.RIGHT)
+        self.console.pack(expand=True, fill=ctk.BOTH, side=ctk.LEFT, pady=10, padx=5)
 
     def on_enter_pressed(self, event):
-        if self.right_console.index("insert linestart") != self.right_console.index("end-1c linestart"):
+        if self.console.index("insert linestart") != self.console.index("end-1c linestart"):
             return "break"  # If the current line is not the penultimate line, prevent the key event
-        self.left_console.new_line(line_break=True)
+        self.command_handler.process_command(self.console.get_last_line()[18:])
+        if self.command_handler.last_function == "clear":
+            return "break"
+        return "break"
 
     def on_key_pressed(self, event):
-        if self.right_console.index("insert linestart") != self.right_console.index("end-1c linestart"):
-            return "break"  # If the current line is not the penultimate line, prevent the key event
+        if self.console.index("insert linestart") != self.console.index("end-1c linestart"):
+            return "break"
+        if event.keysym == "BackSpace":
+            if self.console.index("insert") == self.console.index("end-1c linestart+18c"):
+                return "break"
 
     def get_line_length(self):
-        return len(self.right_console.get('end-1c linestart', 'end-1c'))
+        return len(self.console.get('end-1c linestart', 'end-1c'))
 
     def get_last_line_index(self):
-        return self.right_console.get_last_line_index()
-
-
-class LeftConsole(ctk.CTkTextbox):
-    def __init__(self, master):
-        super().__init__(master, wrap=tk.WORD, width=196, height=500, font=("Cascadia Code", 17), fg_color="#1B1B1B", bg_color="#1B1B1B", activate_scrollbars=False, state="disabled",
-                         corner_radius=10)
-        self.master = master
-        self.right_console = master.right_console
-
-        self.string = "classical@user ~$"
-        self.new_line(line_break=False)
-
-    def new_line(self, line_break=True):
-        self.configure(state="normal")
-        if line_break:
-            text_to_insert = "\n" + self.string
-        else:
-            text_to_insert = self.string
-        print(f"divmod: {divmod(self.master.get_line_length(), 57)}")
-        for _ in range(divmod(self.master.get_line_length(), 57)[0]):
-            self.insert(ctk.END, "\n")
-
-        self.insert(ctk.END, text_to_insert)
-
-        self.configure(state="disabled")
-
-
-class RightConsole(ctk.CTkTextbox):
-    def __init__(self, master):
-        super().__init__(master, wrap=tk.WORD, width=605, height=500, font=("Cascadia Code", 17), fg_color="#1B1B1B", bg_color="#1B1B1B",
-                         activate_scrollbars=False, state="normal", corner_radius=10, border_spacing=0)
-        self.master = master
-
-    def get_last_line_index(self):
-        return self.index("end-1c")
-
-    def get_command_function(self) -> str:
-        command: str = self.get("end-2c linestart", "end-1c").split(" ")[0]
-        return command
-
-    def get_command_arg(self) -> str:
-        arg: str = self.get("end-2c linestart", "end-1c").split(" ")
-        if len(arg) > 1:
-            return arg[1]
-        return arg
-
-    def get_command_options(self):
-        options: list[str] = self.get("end-2c linestart", "end-1c").split(" ")
-        if len(options) > 2:
-            return options[2:]
-        return options
+        return self.console.get_last_line_index()
 
 
 if __name__ == "__main__":
