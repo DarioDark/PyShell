@@ -32,3 +32,5 @@ class Console(ctk.CTkTextbox):
 
     def break_line(self):
         self.insert(ctk.END, "\n")
+
+    # TODO def wait_for_input(self):

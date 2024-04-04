@@ -66,7 +66,7 @@ class MainFrame(ctk.CTkFrame):
         if self.console.index("insert linestart") != self.console.index("end-1c linestart"):
             return "break"
         if event.keysym == "BackSpace":
-            if self.console.index("insert") == self.console.index("end-1c linestart+18c"):
+            if self.console.index("insert") < self.console.index("end-1c linestart+19c"):
                 return "break"
 
     def get_line_length(self):

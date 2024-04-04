@@ -74,8 +74,7 @@ class CommandHandler:
             return ["You can't divide by zero"]
 
     @staticmethod
-    def pyshell(arg: Literal["-f : Change the font color of the terminal.", "-u : Change the font color of the classic user", "-su : Changes the font color of the super user."],
-                *options: str) -> list[str]:
+    def pyshell(arg: Literal["-f : Change the font color of the terminal.", "-u : Change the font color of the classic user", "-su : Changes the font color of the super user."],*options: str) -> list[str]:
         """Interact with the Python shell."""
         if arg == "":
             return ["This is a Python shell"]
@@ -100,7 +99,7 @@ class CommandHandler:
 
         if arg == "No argument provided":
             print("yes")
-            return [f"{func.__name__.upper()} : {func.__doc__}" for func in CommandHandler.command_dict.values()] + [""] + ["For more info about a command, type HELP and then the command"]
+            return [f"{func.__name__.upper()} : {func.__doc__}" for func in CommandHandler.command_dict.values()] + [""] + ["For more info about a command, type HELP and then the command."]
 
         if arg in CommandHandler.command_dict.keys():
             result = [f"{arg.upper()} : {CommandHandler.command_dict[arg].__doc__}"]
@@ -126,6 +125,9 @@ class CommandHandler:
                     result.append("     -" + param.annotation.__name__.capitalize())
             return result
         return ["Command not found"]
+
+        # TODO def wait_for_input(self) -> None:
+        # self.console.wait_for_input()
 
     command_dict: dict[str, callable] = {"calc": calculate,
                                          "exit": exit,
