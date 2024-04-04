@@ -57,9 +57,9 @@ class MainFrame(ctk.CTkFrame):
     def on_enter_pressed(self, event):
         if self.console.index("insert linestart") != self.console.index("end-1c linestart"):
             return "break"  # If the current line is not the penultimate line, prevent the key event
-        self.command_handler.process_command(self.console.get_last_line()[18:])
-        if self.command_handler.last_function == "clear":
-            return "break"
+        line = self.console.get_last_line()[18:]
+        print(f"line: {line}")
+        self.command_handler.process_command(line)
         return "break"
 
     def on_key_pressed(self, event):
