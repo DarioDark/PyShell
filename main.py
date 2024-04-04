@@ -102,7 +102,7 @@ class RightConsole(ctk.CTkTextbox):
         super().__init__(master, wrap=tk.WORD, width=605, height=500, font=("Cascadia Code", 17), fg_color="#1B1B1B", bg_color="#1B1B1B",
                          activate_scrollbars=False, state="normal", corner_radius=10, border_spacing=0)
         self.master = master
-        
+
     def get_last_line_index(self):
         return self.index("end-1c linestart")
 
