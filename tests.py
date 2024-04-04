@@ -1,7 +1,7 @@
-import inspect
 from typing import Literal
+import inspect
 
-def func(x: Literal["-h", "-p"]):
+def func(x: Literal["-h", "-v"]):
     """Add 1 to x."""
     return x
 
@@ -9,6 +9,8 @@ sig = inspect.signature(func)
 params = sig.parameters
 
 for name, param in params.items():
-    # convert the tuple to a beautiful string
-    print(type(param.annotation))
-    print(param.annotation.__args__.__str__().replace("(", "").replace(")", "").replace("'", ""))
+    try:
+        is_literal = param.annotation.__origin__ == Literal
+    except AttributeError:
+        is_literal = False
+    print(f"Is the annotation of parameter '{name}' a Literal? {is_literal}")

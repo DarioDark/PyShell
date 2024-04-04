@@ -53,7 +53,7 @@ class CommandHandler:
 
         # Argument needed
         arg_provided: bool = arg != "No argument provided"
-        if not arg_provided:
+        if not arg_provided and function != "help":
             self.console.print_line("No argument provided")
             self.console.new_line()
             return
@@ -66,7 +66,7 @@ class CommandHandler:
         return
 
     @staticmethod
-    def calculate(arg: str, *options: str) -> list[str]:
+    def calculate(arg: Literal["calculus"], *options: str) -> list[str]:
         """Calculate the result of a mathematical expression."""
         try:
             return [str(eval(arg))]
@@ -74,7 +74,8 @@ class CommandHandler:
             return ["You can't divide by zero"]
 
     @staticmethod
-    def pyshell(arg: str, *options: Literal["-f", "-c", "-p"]) -> list[str]:
+    def pyshell(arg: Literal["-f : Change the font color of the terminal.", "-u : Change the font color of the classic user", "-su : Changes the font color of the super user."],
+                *options: str) -> list[str]:
         """Interact with the Python shell."""
         if arg == "":
             return ["This is a Python shell"]
@@ -93,19 +94,36 @@ class CommandHandler:
         self.master.master.after(500, self.master.master.on_close)
         return "Exiting..."
 
-    def show_help(self, arg: str, *options: str) -> list[str]:
+    @staticmethod
+    def show_help(arg: str, *options: str) -> list[str]:
         """Display help information about commands."""
-        print(f"arg: {arg}")
-        if arg == "":
-            return [f"{func.__name__.upper()} : {func.__doc__}" for func in CommandHandler.command_dict.values()] +[""] + ["For more info about a command, type HELP and then the command"]
+
+        if arg == "No argument provided":
+            print("yes")
+            return [f"{func.__name__.upper()} : {func.__doc__}" for func in CommandHandler.command_dict.values()] + [""] + ["For more info about a command, type HELP and then the command"]
 
         if arg in CommandHandler.command_dict.keys():
-            result = []
-            for name, param in inspect.signature(CommandHandler.command_dict[arg]).parameters.items():
-                if param.annotation == Literal:
-                    result.append(f"{arg.upper()} : {CommandHandler.command_dict[arg].__doc__} : {param.annotation.__args__}")
+            result = [f"{arg.upper()} : {CommandHandler.command_dict[arg].__doc__}"]
+
+            sig = inspect.signature(CommandHandler.command_dict[arg])
+            params = sig.parameters
+
+            if len(params) > 1 or next(iter(params)) != "self":
+                print("yes", params)
+                result[0] += " \nArgs : "
+            else:
+                return result
+
+            for name, param in params.items():
+                try:
+                    is_literal = param.annotation.__origin__ == Literal
+                except AttributeError:
+                    is_literal = False
+                if is_literal:
+                    result.append(param.annotation.__args__.__str__().replace("(", "").replace(")", "\n\nOptions : ").replace("'", "").replace(", ", "\n").replace("-", "     -"))
                 else:
-                    result.append(f"{arg.upper()} : {CommandHandler.command_dict[arg].__doc__} : {param.annotation}")
+                    # TODO optional arguments
+                    result.append("     -" + param.annotation.__name__.capitalize())
             return result
         return ["Command not found"]
 
