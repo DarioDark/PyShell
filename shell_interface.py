@@ -39,6 +39,8 @@ class MainFrame(ctk.CTkFrame):
         super().__init__(master, corner_radius=20, fg_color="#1B1B1B")
         self.master = master
 
+        self.last_function_used_index: int = 0
+
         self.create_widgets()
         self.bind_widgets()
         self.place_widgets()
@@ -68,6 +70,22 @@ class MainFrame(ctk.CTkFrame):
         if event.keysym == "BackSpace":
             if self.console.index("insert") < self.console.index("end-1c linestart+19c"):
                 return "break"
+        # arrow up
+        if event.keysym == "Up":
+            self.last_function_used_index -= 1
+            self.last_function_used_index = max(-len(self.command_handler.last_functions), self.last_function_used_index)
+            print(self.last_function_used_index, self.command_handler.last_functions)
+            self.console.delete("end-1c linestart", "end-1c")
+            self.console.insert("end-1c", "classical@user ~$ " + self.command_handler.last_functions[self.last_function_used_index])
+            return "break"
+        # arrow down
+        if event.keysym == "Down":
+            self.last_function_used_index += 1
+            self.last_function_used_index = min(0, self.last_function_used_index)
+            print(self.last_function_used_index, self.command_handler.last_functions)
+            self.console.delete("end-1c linestart", "end-1c")
+            self.console.insert("end-1c", "classical@user ~$ " + self.command_handler.last_functions[self.last_function_used_index])
+            return "break"
 
     def get_line_length(self):
         return len(self.console.get('end-1c linestart', 'end-1c'))

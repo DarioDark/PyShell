@@ -7,7 +7,7 @@ class CommandHandler:
         self.master = master
         self.console = console
 
-        self.last_function: str = ""
+        self.last_functions: list[str] = [""]
 
     def get_command_function(self, command: str) -> str:
         command: str = command.split(" ")[0]
@@ -46,9 +46,11 @@ class CommandHandler:
         # No argument needed
         if function == "clear":
             self.clear()
+            self.last_functions.append("clear")
             return
         elif function == "exit":
             self.exit()
+            self.last_functions.append("exit")
             return
 
         # Argument needed
@@ -63,6 +65,9 @@ class CommandHandler:
             self.console.print_line(result[i])
         self.console.break_line()
         self.console.new_line()
+        if arg == "No argument provided":
+            arg = ""
+        self.last_functions.append(function + " " + arg + " ".join(options).replace("  ", ""))
         return
 
     @staticmethod
