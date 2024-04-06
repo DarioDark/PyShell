@@ -4,11 +4,18 @@ import inspect
 
 class CommandHandler:
     """Handles the commands and the entry of the user."""
+    available_colors: list[str] = ["white", "red", "green", "blue", "yellow", "cyan", "magenta"]
+
     def __init__(self, master, console):
         self.master = master
         self.console = console
-
+        self.command_dict: dict[str, callable] = {"calc": self.calc,
+                                                  "exit": self.exit,
+                                                  "help": self.show_help,
+                                                  "clear": self.clear,
+                                                  "pyshell": self.pyshell}
         self.last_functions: list[str] = [""]
+        self.waiting_for_input: bool = False
 
     def get_command_function(self, command: str) -> str:
         """Get the function of the command."""
@@ -33,9 +40,9 @@ class CommandHandler:
     def process_command(self, command: str) -> None:
         """Process the command and print the result to the console."""
         # Get the function, argument and options of the command
-        function = self.get_command_function(command)
-        arg = self.get_command_arg(command)
-        options = self.get_command_options(command)
+        function: str = self.get_command_function(command)
+        arg: str = self.get_command_arg(command)
+        options: list[str] = self.get_command_options(command)
 
         # If the function is empty, break the line
         if function == '':
@@ -44,7 +51,7 @@ class CommandHandler:
 
         # If the function is not found, print an error message
         self.console.break_line()
-        function_found: bool = function in CommandHandler.command_dict
+        function_found: bool = function in self.command_dict
         if not function_found:
             self.console.print_line(f"Command '{function}' not found")
             self.console.new_line()
@@ -68,15 +75,20 @@ class CommandHandler:
             return
 
         # Calls the function and prints the result
-        result: list[str] = CommandHandler.command_dict[function](arg, *options)
+        result: list[str] = self.command_dict[function](arg, *options)
         for i in range(len(result)):
             self.console.print_line(result[i])
         self.console.break_line()
         self.console.new_line()
+        
         if arg == "No argument provided":
             arg = ""
         self.last_functions.append(function + " " + arg + " ".join(options).replace("  ", ""))
         return
+
+    def process_response(self, response: str) -> None:
+        """Process the response of the user."""
+        ...  # TODO
 
     def clear(self) -> str:
         """Clear the console."""
@@ -89,35 +101,44 @@ class CommandHandler:
         self.master.master.after(500, self.master.master.on_close)
         return "Exiting..."
 
-    @staticmethod
-    def calculate(arg: Literal["calculus"], *options: str) -> list[str]:
+    def calc(self, arg: Literal["calculus"], *options: str) -> list[str]:
         """Calculate the result of a mathematical expression."""
         try:
             return [str(eval(arg))]
         except ZeroDivisionError:
             return ["You can't divide by zero"]
 
-    @staticmethod
-    def pyshell(arg: Literal["-f : Change the font color of the terminal.", "-u : Change the font color of the classic user", "-su : Changes the font color of the super user."],*options: str) -> list[str]:
+    def pyshell(self, arg: Literal["typcol : Change the typing color.", "-u : Change the font color of the classic user", "-su : Changes the font color of the super user."], *options: str) -> list[str]:
         """Interact with the Python shell."""
         if arg == "":
-            return ["This is a Python shell, use one of the follwing options to change the properties of the shell: -f, -u, -su"]
-        if arg == "-p":
-            return ["Change properties: font, color, etc."]
+            return ["This is a Python shell, use one of the following options to change the properties of the shell: -f, -u, -su"]
+        if arg == "tc":
+            color_given: list[str] = [color for color in options if color in CommandHandler.available_colors]
+            if len(color_given) == 0:
+                return ["Error : Invalid color"]
+            color_picked: str = color_given[0]
+            if color_picked not in CommandHandler.available_colors:
+                return ["Error : Invalid color"]
+            if "-y" in options:
+                self.console.typing_color = color_given
+                return ["Typing color changed to " + color_picked]
+            else:
+                self.waiting_for_input = True
+                return ["Are you sure you want to change the typing color to " + color_picked + "? [Y/n]"]
+
+            # TODO wait for response
         return ["Error : Invalid argument"]
 
-    @staticmethod
-    def show_help(arg: str, *options: str) -> list[str]:
+    def show_help(self, arg: Literal["A function."], *options: str) -> list[str]:
         """Display help information about commands."""
 
         if arg == "No argument provided":
-            print("yes")
-            return [f"{func.__name__.upper()} : {func.__doc__}" for func in CommandHandler.command_dict.values()] + [""] + ["For more info about a command, type HELP and then the command."]
+            return [f"{func.__name__.upper()} : {func.__doc__}" for func in self.command_dict.values()] + [""] + ["For more info about a command, type HELP and then the command."]
 
-        if arg in CommandHandler.command_dict.keys():
-            result = [f"{arg.upper()} : {CommandHandler.command_dict[arg].__doc__}"]
+        if arg in self.command_dict.keys():
+            result = [f"{arg.upper()} : {self.command_dict[arg].__doc__}"]
 
-            sig = inspect.signature(CommandHandler.command_dict[arg])
+            sig = inspect.signature(self.command_dict[arg])
             params = sig.parameters
 
             if len(params) > 1 or next(iter(params)) != "self":
@@ -141,9 +162,3 @@ class CommandHandler:
 
         # TODO def wait_for_input(self) -> None:
         # self.console.wait_for_input()
-
-    command_dict: dict[str, callable] = {"calc": calculate,
-                                         "exit": exit,
-                                         "help": show_help,
-                                         "clear": clear,
-                                         "pyshell": pyshell}

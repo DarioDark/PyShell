@@ -1,3 +1,5 @@
+import _tkinter
+
 import customtkinter as ctk
 from console import Console
 from command_handler import CommandHandler
@@ -10,6 +12,7 @@ class PyShell(ctk.CTk):
         ctk.set_appearance_mode("dark")
         ctk.set_default_color_theme("dark-blue")
         self.title("PyShell")
+        self.iconbitmap("assets/terminal_icon.ico")
 
         # Center the window
         screen_width = self.winfo_screenwidth()
@@ -26,11 +29,9 @@ class PyShell(ctk.CTk):
         self.mainloop()
 
     def create_widgets(self):
-        """Creates the widgets."""
         self.main_frame = MainFrame(self)
 
     def place_widgets(self):
-        """Places the widgets on the frame."""
         self.main_frame.pack(pady=20, padx=10, fill="both", expand=True)
 
     def on_close(self):
@@ -51,17 +52,14 @@ class MainFrame(ctk.CTkFrame):
         self.place_widgets()
 
     def create_widgets(self):
-        """Creates the widgets."""
         self.console = Console(self)
         self.command_handler = CommandHandler(self, self.console)
 
     def bind_widgets(self):
-        """Binds the widgets to their respective methods."""
         self.console.bind("<Return>", self.on_enter_pressed)  # Bind the Enter key to the on_enter_pressed method
         self.console.bind("<Key>", self.on_key_pressed)  # Bind the Key event to the on_key_pressed method
 
     def place_widgets(self):
-        """Places the widgets on the frame."""
         self.console.pack(expand=True, fill=ctk.BOTH, side=ctk.LEFT, pady=10, padx=5)
 
     def on_enter_pressed(self, event):
@@ -70,8 +68,13 @@ class MainFrame(ctk.CTkFrame):
         if self.console.index("insert linestart") != self.console.index("end-1c linestart"):
             return "break"
 
-        line = self.console.get_last_line()[18:]
-        self.command_handler.process_command(line)
+        if self.command_handler.waiting_for_input:
+            self.command_handler.waiting_for_input = False
+            self.command_handler.process_command(self.console.get_last_line()[18:].lower())
+            return "break"
+        else:
+            line = self.console.get_last_line()[18:].lower()
+            self.command_handler.process_command(line)
         return "break"
 
     def on_key_pressed(self, event):
@@ -84,6 +87,14 @@ class MainFrame(ctk.CTkFrame):
         if event.keysym == "BackSpace":
             if self.console.index("insert") < self.console.index("end-1c linestart+19c"):
                 return "break"
+
+        # TODO If the user is trying to delete the first 18 characters, prevent the key event
+        if event.keysym == "BackSpace":
+            try:
+                if self.console.index("sel.first") < self.console.index("end-1c linestart+19c") or self.console.index("sel.last") < self.console.index("end-1c linestart+19c"):
+                    return "break"
+            except _tkinter.TclError:  # If there is no selection, this will be raised
+                pass
 
         # Iterates through the last functions used
         if event.keysym == "Up":
@@ -99,13 +110,11 @@ class MainFrame(ctk.CTkFrame):
             self.console.write(self.command_handler.last_functions[self.last_function_used_index])
             return "break"
 
-    def get_line_length(self):
-        """Returns the length of the current line."""
-        return len(self.console.get('end-1c linestart', 'end-1c'))
-
-    def get_last_line_index(self):
-        """Returns the index of the last line."""
-        return self.console.get_last_line_index()
+        # Insert colored text for each key press
+        if event.char.isprintable():
+            self.console.delete("insert")
+            self.console.insert("insert", event.char, self.console.typing_color)
+            return "break"
 
 
 if __name__ == "__main__":
