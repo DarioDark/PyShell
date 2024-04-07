@@ -1,5 +1,5 @@
-string = "-u -fa"
+print("Hello World!")
 
-# how to check if -fa is in the string
-if "-f" in string:
-    print("Yes")
+input("Press Enter to continue...")
+
+print("Goodbye World!")

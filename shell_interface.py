@@ -68,13 +68,9 @@ class MainFrame(ctk.CTkFrame):
         if self.console.index("insert linestart") != self.console.index("end-1c linestart"):
             return "break"
 
-        if self.command_handler.waiting_for_input:
-            self.command_handler.waiting_for_input = False
-            self.command_handler.process_command(self.console.get_last_line()[18:].lower())
-            return "break"
-        else:
-            line = self.console.get_last_line()[18:].lower()
-            self.command_handler.process_command(line)
+        # Get the command from the console
+        line = self.console.get_last_line().strip().lower()
+        self.command_handler.manage_user_input(line)
         return "break"
 
     def on_key_pressed(self, event):
@@ -99,15 +95,15 @@ class MainFrame(ctk.CTkFrame):
         # Iterates through the last functions used
         if event.keysym == "Up":
             self.last_function_used_index -= 1
-            self.last_function_used_index = max(-len(self.command_handler.last_functions), self.last_function_used_index)
-            self.console.write(self.command_handler.last_functions[self.last_function_used_index])
+            self.last_function_used_index = max(-len(self.command_handler.last_commands), self.last_function_used_index)
+            self.console.write(self.command_handler.last_commands[self.last_function_used_index])
             return "break"
 
         # Iterates through the last functions used
         if event.keysym == "Down":
             self.last_function_used_index += 1
             self.last_function_used_index = min(0, self.last_function_used_index)
-            self.console.write(self.command_handler.last_functions[self.last_function_used_index])
+            self.console.write(self.command_handler.last_commands[self.last_function_used_index])
             return "break"
 
         # Insert colored text for each key press

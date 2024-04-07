@@ -7,7 +7,6 @@
     <list default="true" id="c0d1afaf-faa5-49e0-ba25-15f3a3f1ca8d" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/command_handler.py" beforeDir="false" afterPath="$PROJECT_DIR$/command_handler.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/console.py" beforeDir="false" afterPath="$PROJECT_DIR$/console.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/shell_interface.py" beforeDir="false" afterPath="$PROJECT_DIR$/shell_interface.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tests.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests.py" afterDir="false" />
     </list>

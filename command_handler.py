@@ -1,5 +1,6 @@
-from typing import Literal
 import inspect
+from typing import Literal
+from threading import Thread
 
 
 class CommandHandler:
@@ -14,8 +15,15 @@ class CommandHandler:
                                                   "help": self.show_help,
                                                   "clear": self.clear,
                                                   "pyshell": self.pyshell}
-        self.last_functions: list[str] = [""]
-        self.waiting_for_input: bool = False
+        self.last_commands: list[str] = [""]
+        self.status: Literal["waiting for response", "waiting for command"] = "waiting for command"
+        self.response: str = ""
+
+    def save_last_command(self, function: str, arg: str, *options: str) -> None:
+        if arg == "No argument provided":
+            arg = ""
+        self.last_commands.append(function + " " + arg + " " + " ".join(options).replace("  ", ""))
+        return
 
     def get_command_function(self, command: str) -> str:
         """Get the function of the command."""
@@ -37,17 +45,12 @@ class CommandHandler:
             return options[2:]
         return []
 
-    def process_command(self, command: str) -> None:
-        """Process the command and print the result to the console."""
-        # Get the function, argument and options of the command
-        function: str = self.get_command_function(command)
-        arg: str = self.get_command_arg(command)
-        options: list[str] = self.get_command_options(command)
-
+    def check_provided_command(self, function: str, arg: str) -> bool:
+        """Check if the command has a function, argument and options."""
         # If the function is empty, break the line
         if function == '':
             self.console.new_line()
-            return
+            return False
 
         # If the function is not found, print an error message
         self.console.break_line()
@@ -55,40 +58,69 @@ class CommandHandler:
         if not function_found:
             self.console.print_line(f"Command '{function}' not found")
             self.console.new_line()
-            return
+            return False
 
         # Functions that don't need an argument
         if function == "clear":
             self.clear()
-            self.last_functions.append("clear")
-            return
+            self.last_commands.append("clear")
+            return False
         elif function == "exit":
             self.exit()
-            self.last_functions.append("exit")
-            return
+            self.last_commands.append("exit")
+            return False
 
         # For the functions that need an argument, if no argument is provided, print an error message
         arg_provided: bool = arg != "No argument provided"
         if not arg_provided and function != "help":
             self.console.print_line("No argument provided")
             self.console.new_line()
-            return
+            return False
 
-        # Calls the function and prints the result
-        result: list[str] = self.command_dict[function](arg, *options)
-        for i in range(len(result)):
-            self.console.print_line(result[i])
-        self.console.break_line()
-        self.console.new_line()
-        
-        if arg == "No argument provided":
-            arg = ""
-        self.last_functions.append(function + " " + arg + " ".join(options).replace("  ", ""))
-        return
+    def check_provided_response(self, response: str) -> bool:
+        """Check if the response is valid."""
+        if response.lower() not in ["y", "n"]:
+            self.console.print_line("Invalid response")
+            self.console.new_line()
+            return False
+        return True
 
-    def process_response(self, response: str) -> None:
+    def process_command(self, line: str) -> None:
+        """Process the command and print the result to the console."""
+        # Get the function, argument and options of the command
+        command: str = line[18:]
+        function: str = self.get_command_function(command)
+        arg: str = self.get_command_arg(command)
+        options: list[str] = self.get_command_options(command)
+
+        # Check if the command is valid
+        if self.check_provided_command(function, arg):
+            # Execute the command and print the result to the console
+            result: list[str] = self.command_dict[function](arg, *options)
+            for i in range(len(result)):
+                self.console.print_line(result[i])
+            self.console.break_line()
+            self.console.new_line()
+
+        self.save_last_command(function, arg, *options)
+
+    def process_response(self, line: str) -> None:
         """Process the response of the user."""
-        ...  # TODO
+        response: str = line[-1]
+        if self.check_provided_response(response):
+            pass
+
+    def manage_user_input(self, line: str) -> None:
+        """Manage the user input."""
+        self.response = line[-1]
+        if self.status == "waiting for command":
+            self.process_command(line)
+        elif self.status == "waiting for response":
+            self.process_response(line)
+
+    def wait_for_input(self) -> None:
+        while self.response == "":
+            pass
 
     def clear(self) -> str:
         """Clear the console."""
@@ -108,25 +140,30 @@ class CommandHandler:
         except ZeroDivisionError:
             return ["You can't divide by zero"]
 
-    def pyshell(self, arg: Literal["typcol : Change the typing color.", "-u : Change the font color of the classic user", "-su : Changes the font color of the super user."], *options: str) -> list[str]:
+    def pyshell(self, arg: Literal["tc : Change the typing color.", "-u : Change the font color of the classic user", "-su : Changes the font color of the super user."], *options: str,
+                printing: bool = True, validated: bool = False) -> list[str]:
         """Interact with the Python shell."""
-        if arg == "":
-            return ["This is a Python shell, use one of the following options to change the properties of the shell: -f, -u, -su"]
-        if arg == "tc":
-            color_given: list[str] = [color for color in options if color in CommandHandler.available_colors]
-            if len(color_given) == 0:
-                return ["Error : Invalid color"]
-            color_picked: str = color_given[0]
-            if color_picked not in CommandHandler.available_colors:
-                return ["Error : Invalid color"]
-            if "-y" in options:
-                self.console.typing_color = color_given
-                return ["Typing color changed to " + color_picked]
-            else:
-                self.waiting_for_input = True
-                return ["Are you sure you want to change the typing color to " + color_picked + "? [Y/n]"]
+        if printing:
+            if arg == "":
+                return ["This is a Python shell, use one of the following options to change the properties of the shell: -f, -u, -su"]
+            if arg == "tc":
+                color_given: list[str] = [color for color in options if color in CommandHandler.available_colors]
+                if len(color_given) == 0:
+                    return ["Error : Invalid color"]
+                color_picked: str = color_given[0]
+                if color_picked not in CommandHandler.available_colors:
+                    return ["Error : Invalid color"]
+        if "-y" in options:
+            self.console.typing_color = color_given
+            return ["Typing color changed to " + color_picked]
+        else:
+            self.console.print_line("Are you sure you want to change the typing color? (y/n)")
+            self.status = "waiting for response"
+            self.thread = Thread(target=self.wait_for_input)
+            self.thread.start()
 
-            # TODO wait for response
+                    return
+
         return ["Error : Invalid argument"]
 
     def show_help(self, arg: Literal["A function."], *options: str) -> list[str]:
@@ -162,3 +199,4 @@ class CommandHandler:
 
         # TODO def wait_for_input(self) -> None:
         # self.console.wait_for_input()
+
