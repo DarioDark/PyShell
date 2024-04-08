@@ -17,6 +17,7 @@ class CommandHandler:
                                                   "pyshell": self.pyshell}
         self.last_commands: list[str] = [""]
         self.status: Literal["waiting for response", "waiting for command"] = "waiting for command"
+        self.minimum_line_length: int = self.console.user_length + 1
 
     def save_last_command(self, function: str, arg: str, *options: str) -> None:
         """Save the last command."""
@@ -77,19 +78,10 @@ class CommandHandler:
             return False
         return True
 
-    def check_provided_response(self, response: str) -> bool:
-        """Check if the response is valid."""
-        if response.lower() not in ["y", "n"]:
-            self.console.print_line("Invalid response")
-            self.status = "waiting for command"
-            self.console.new_line()
-            return False
-        return True
-
     def process_command(self, line: str) -> None:
         """Process the command and print the result to the console."""
         # Get the function, argument and options of the command
-        command: str = line[18:]
+        command: str = line[18:].strip().lower()
         function: str = self.get_command_function(command)
         arg: str = self.get_command_arg(command)
         options: list[str] = self.get_command_options(command)
@@ -98,21 +90,24 @@ class CommandHandler:
         if self.check_provided_command(function, arg):
             # Execute the command and print the result to the console
             result: list[str] = self.command_dict[function](arg, *options)
+            print(function, arg, options, result)
             self.print_to_console(result)
 
         self.save_last_command(function, arg, *options)
 
     def process_response(self, line: str) -> None:
         """Process the response of the user."""
-        response: str = line[-1]
-        if self.check_provided_response(response):
-            if response == "y":
-                self.status = "waiting for command"
-                function: 'function' = self.command_dict[self.get_command_function(self.last_commands[-1])]
-                arg = self.get_command_arg(self.last_commands[-1])
-                options = self.get_command_options(self.last_commands[-1]) + ["-y"]
-                result = function(arg, *options)
-                self.print_to_console(result)
+        response: str = line.split(" ")[-1]
+        if response.lower() == "y":
+            response = "-y"
+
+        command = self.last_commands[-1].strip().lower()
+        self.status = "waiting for command"
+        function: 'function' = self.command_dict[self.get_command_function(command)]
+        arg = self.get_command_arg(command)
+        options = self.get_command_options(command) + [response]
+        result = function(arg, *options)
+        self.print_to_console(result)
 
     def manage_user_input(self, line: str) -> None:
         """Manage the user input."""
@@ -148,10 +143,10 @@ class CommandHandler:
         except ZeroDivisionError:
             return ["You can't divide by zero"]
 
-    def pyshell(self, arg: Literal["tc : Change the typing color.", "-u : Change the font color of the classic user", "-su : Changes the font color of the super user."], *options: str) -> list[str]:
+    def pyshell(self, arg: Literal["tc : Change the typing color.", "-uc : Changes the font color of the super user."], *options: str) -> list[str]: # TODO attribute a color invidually to each user
         """Interact with the Python shell."""
         if arg == "":
-            return ["This is a Python shell, use one of the following options to change the properties of the shell: -f, -u, -su"]
+            return ["This is a Python shell, use one of the following options to change the properties of the shell: -tc, -uc"]
         if arg == "tc":
             color_given: list[str] = [color for color in options if color in CommandHandler.available_colors]
             if len(color_given) == 0:
@@ -166,6 +161,22 @@ class CommandHandler:
             else:
                 self.status = "waiting for response"
                 return ["Are you sure you want to change the typing color? (y/n) "]
+
+        if arg == "uc":
+            if len(options) == 0:
+                self.status = "waiting for response"
+                return ["Attribute a color to each user: ", "Classical User -> "]
+            if len(options) == 1:
+                self.status = "waiting for response"
+                return ["Super User -> "]
+            if len(options) == 2:
+                self.status = "waiting for response"
+                return ["Are you sure you want to change the user colors? (y/n) "]
+            if len(options) == 3 and options[2] == "-y":
+                self.status = "waiting for command"
+                self.console.users_colors["classical"] = options[0]
+                self.console.users_colors["super"] = options[1]
+                return ["User colors changed"]
 
     def show_help(self, arg: Literal["A function."], *options: str) -> list[str]:
         """Display help information about commands."""

@@ -1,5 +1,6 @@
 import customtkinter as ctk
 
+from typing import Literal
 
 class Console(ctk.CTkTextbox):
     """A custom console widget."""
@@ -7,7 +8,9 @@ class Console(ctk.CTkTextbox):
         super().__init__(master, wrap=ctk.WORD, width=1050, height=650, font=("Cascadia Code", 17), fg_color="transparent",
                          bg_color="transparent", activate_scrollbars=False, state="normal", corner_radius=10)
         self.master = master
-        self.user_color: str = "yellow"
+        self.user: Literal["classical", "super"] = "classical"
+        self.users_colors: dict[str, str] = {"classical": "yellow", "super": "red"}
+        self.user_color: str = self.users_colors[self.user]
         self.typing_color: str = "white"
 
         self.config_tags()

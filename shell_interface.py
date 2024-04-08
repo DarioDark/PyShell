@@ -84,7 +84,6 @@ class MainFrame(ctk.CTkFrame):
             if self.console.index("insert") < self.console.index("end-1c linestart+19c"):
                 return "break"
 
-        # TODO If the user is trying to delete the first 18 characters, prevent the key event
         if event.keysym == "BackSpace":
             try:
                 if self.console.index("sel.first") < self.console.index("end-1c linestart+19c") or self.console.index("sel.last") < self.console.index("end-1c linestart+19c"):
