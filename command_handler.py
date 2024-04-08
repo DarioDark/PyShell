@@ -155,7 +155,8 @@ class CommandHandler:
         if arg == "tc":
             color_given: list[str] = [color for color in options if color in CommandHandler.available_colors]
             if len(color_given) == 0:
-                return ["Error : Invalid color"]
+                formatted_colors = ', '.join(CommandHandler.available_colors)
+                return [f"Error : Invalid color, use one of the following colors : {formatted_colors}."]
             color_picked: str = color_given[0]
             if color_picked not in CommandHandler.available_colors:
                 return ["Error : Invalid color"]
