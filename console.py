@@ -15,6 +15,10 @@ class Console(ctk.CTkTextbox):
         self.string = "classical@user ~$ "
         self.new_line(line_break=False)
 
+    @property
+    def user_length(self):
+        return len(self.string)
+
     def config_tags(self):
         self.tag_config("white", foreground="white")
         self.tag_config("red", foreground="red")
@@ -55,7 +59,5 @@ class Console(ctk.CTkTextbox):
 
     def write(self, text: str):
         """Write text to the console (on the same line)."""
-        self.delete("end-1c linestart", "end-1c")
-        self.insert("end-1c", self.string + text, self.typing_color)
-
-    # TODO def wait_for_input(self):
+        self.delete(f"end-1c linestart +{self.user_length}c", "end-1c lineend")
+        self.insert(f"end-1c linestart +{self.user_length}c", text, self.typing_color)
