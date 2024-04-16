@@ -1,22 +1,21 @@
-Simple Python Terminal
-Ce projet est un terminal Python basique conçu pour simuler l'expérience d'un terminal Linux. Il a été créé dans le but d'explorer les fonctionnalités de customtkinter et de servir de base pour des projets plus complexes.
+# Simple Python Terminal
+This project is a basic Python terminal designed to simulate the experience of a Linux terminal. It was created to explore the features of customtkinter and to serve as a foundation for more complex projects.
 
-Fonctionnalités
-Le terminal propose les fonctionnalités suivantes :
+## Features
+The terminal offers the following features:
 
-help : Affiche une liste des commandes disponibles et fournit des informations sur leur utilisation.
-clear : Efface l'écran du terminal.
-exit : Ferme le terminal.
-pyshell : Permet d'interagir avec une coquille Python pour changer certaines propriétés.
-calc : Lance une calculatrice basique.
-Pour plus d'informations sur l'utilisation de chaque commande, utilisez la commande help.
+- help: Displays a list of available commands and provides information on their usage.
+- clear: Clears the terminal screen.
+- exit: Closes the terminal.
+- pyshell: Allows interaction with a Python shell to change certain properties.
+- calc: Launches a basic calculator.
 
-Installation
-Clonez ce dépôt sur votre machine locale.
-Assurez-vous d'avoir Python installé sur votre système.
-Exécutez le fichier terminal.py.
-bash
-Copy code
-python terminal.py
-Utilisation
-Une fois que le terminal est lancé, vous pouvez utiliser les commandes répertoriées ci-dessus pour interagir avec celui-ci. Utilisez la commande help pour obtenir des informations détaillées sur chaque commande.
+For more information on how to use each command, use the help command.
+
+## Installation
+- Clone this repository to your local machine.
+- Make sure you have Python installed on your system.
+- Execute the file terminal.py.
+
+## Usage
+Once the terminal is launched, you can use the listed commands above to interact with it. Use the help command to get detailed information on each command.
