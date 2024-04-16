@@ -1,5 +1,5 @@
 # Simple Python Terminal
-This project is a basic Python terminal designed to simulate the experience of a Linux terminal. It was created to explore the features of customtkinter and to serve as a foundation for more complex projects.
+This project is a basic Python terminal designed to simulate the experience of a Linux terminal. It was created primarily to explore the features of customtkinter and to serve as a foundation for more complex projects. While the terminal itself doesn't have a practical application, it provides a platform for experimenting with custom GUI elements and functionality.
 
 ## Features
 The terminal offers the following features:
