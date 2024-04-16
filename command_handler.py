@@ -90,7 +90,6 @@ class CommandHandler:
         if self.check_provided_command(function, arg):
             # Execute the command and print the result to the console
             result: list[str] = self.command_dict[function](arg, *options)
-            print(function, arg, options, result)
             self.print_to_console(result)
 
         self.save_last_command(function, arg, *options)
@@ -143,7 +142,7 @@ class CommandHandler:
         except ZeroDivisionError:
             return ["You can't divide by zero"]
 
-    def pyshell(self, arg: Literal["tc : Change the typing color.", "-uc : Changes the font color of the super user."], *options: str) -> list[str]: # TODO attribute a color invidually to each user
+    def pyshell(self, arg: Literal["tc: Change the typing color.", "reset: Reset the changes back to factory settings."], *options: str) -> list[str]:
         """Interact with the Python shell."""
         if arg == "":
             return ["This is a Python shell, use one of the following options to change the properties of the shell: -tc, -uc"]
@@ -151,32 +150,24 @@ class CommandHandler:
             color_given: list[str] = [color for color in options if color in CommandHandler.available_colors]
             if len(color_given) == 0:
                 formatted_colors = ', '.join(CommandHandler.available_colors)
-                return [f"Error : Invalid color, use one of the following colors : {formatted_colors}."]
+                return [f"Error: Invalid color, use one of the following colors: {formatted_colors}."]
             color_picked: str = color_given[0]
             if color_picked not in CommandHandler.available_colors:
-                return ["Error : Invalid color"]
+                return ["Error: Invalid color"]
             if "-y" in options:
                 self.console.typing_color = color_given
-                return ["Typing color changed to " + color_picked]
+                return [f"Typing color changed to {color_picked}"]
             else:
                 self.status = "waiting for response"
                 return ["Are you sure you want to change the typing color? (y/n) "]
 
-        if arg == "uc":
-            if len(options) == 0:
+        if arg == "reset":
+            if "-y" in options:
+                self.console.typing_color = "white"
+                return ["Settings reset to factory settings"]
+            else:
                 self.status = "waiting for response"
-                return ["Attribute a color to each user: ", "Classical User -> "]
-            if len(options) == 1:
-                self.status = "waiting for response"
-                return ["Super User -> "]
-            if len(options) == 2:
-                self.status = "waiting for response"
-                return ["Are you sure you want to change the user colors? (y/n) "]
-            if len(options) == 3 and options[2] == "-y":
-                self.status = "waiting for command"
-                self.console.users_colors["classical"] = options[0]
-                self.console.users_colors["super"] = options[1]
-                return ["User colors changed"]
+                return ["Are you sure you want to reset the settings? (y/n) "]
 
     def show_help(self, arg: Literal["A function."], *options: str) -> list[str]:
         """Display help information about commands."""
@@ -203,7 +194,6 @@ class CommandHandler:
                 if is_literal:
                     result.append(param.annotation.__args__.__str__().replace("(", "").replace(")", "\n\nOptions : ").replace("'", "").replace(", ", "\n").replace("-", "     -"))
                 else:
-                    # TODO optional arguments
                     result.append("     -" + param.annotation.__name__.capitalize())
             return result
         return ["Command not found"]

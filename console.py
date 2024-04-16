@@ -2,6 +2,7 @@ import customtkinter as ctk
 
 from typing import Literal
 
+
 class Console(ctk.CTkTextbox):
     """A custom console widget."""
     def __init__(self, master):
